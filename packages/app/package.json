@@ -140,5 +140,10 @@
     "presets": [
       "react-app"
     ]
+  },
+  "devDependencies": {
+    "less": "^4.1.3",
+    "less-loader": "^11.1.0",
+    "webpackbar": "^5.0.2"
   }
 }

@@ -25,6 +25,7 @@ const ForkTsCheckerWebpackPlugin =
     ? require('react-dev-utils/ForkTsCheckerWarningWebpackPlugin')
     : require('react-dev-utils/ForkTsCheckerWebpackPlugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+const WebpackBar = require('webpackbar')
 
 const createEnvironmentHash = require('./webpack/persistentCache/createEnvironmentHash');
 
@@ -71,6 +72,7 @@ const cssRegex = /\.css$/;
 const cssModuleRegex = /\.module\.css$/;
 const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
+const lessRegex = /\.less$/;
 
 const hasJsxRuntime = (() => {
   if (process.env.DISABLE_NEW_JSX_TRANSFORM === 'true') {
@@ -105,7 +107,7 @@ module.exports = function (webpackEnv) {
   const shouldUseReactRefresh = env.raw.FAST_REFRESH;
 
   // common function to get style loaders
-  const getStyleLoaders = (cssOptions, preProcessor) => {
+  const getStyleLoaders = (cssOptions, preProcessor, preProcessorOptions={}) => {
     const loaders = [
       isEnvDevelopment && require.resolve('style-loader'),
       isEnvProduction && {
@@ -179,6 +181,7 @@ module.exports = function (webpackEnv) {
           loader: require.resolve(preProcessor),
           options: {
             sourceMap: true,
+            ...preProcessorOptions
           },
         }
       );
@@ -291,6 +294,28 @@ module.exports = function (webpackEnv) {
         // This is only used in production mode
         new CssMinimizerPlugin(),
       ],
+      // runtimeChunk: true,
+      // splitChunks: { 
+      //   chunks: "all",
+      //   minSize: 20000,
+      //   minRemainingSize: 0,
+      //   minChunks: 1,
+      //   maxAsyncRequests: 6,
+      //   maxInitialRequests: 6,
+      //   enforceSizeThreshold: 50000,
+      //   cacheGroups: {
+      //     defaultVendors: {
+      //       test: /[\\/]node_modules[\\/]/,
+      //       priority: -10,
+      //       reuseExistingChunk: true,
+      //     },
+      //     default: {
+      //       minChunks: 2,
+      //       priority: -20,
+      //       reuseExistingChunk: true,
+      //     },
+      //   },
+      // }
     },
     resolve: {
       // This allows you to set a fallback for where webpack should look for modules.
@@ -319,6 +344,7 @@ module.exports = function (webpackEnv) {
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
         ...(modules.webpackAliases || {}),
+        // '@components': path.resolve(__dirname, 'src/components/'),
       },
       plugins: [
         // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -406,6 +432,7 @@ module.exports = function (webpackEnv) {
             {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
               include: paths.appSrc,
+              exclude: /node_modules/,
               loader: require.resolve('babel-loader'),
               options: {
                 customize: require.resolve(
@@ -542,6 +569,29 @@ module.exports = function (webpackEnv) {
                 },
                 'sass-loader'
               ),
+            },
+            {
+              test: lessRegex,
+              use: getStyleLoaders(
+                {
+                  importLoaders: 3,
+                  sourceMap: isEnvProduction
+                    ? shouldUseSourceMap
+                    : isEnvDevelopment,
+                  modules: false,
+                },
+                'less-loader',
+                {
+                  lessOptions: {
+                    javascriptEnabled: true,
+                  }
+                }
+              ),
+              // Don't consider CSS imports dead code even if the
+              // containing package claims to have no side effects.
+              // Remove this when webpack adds a warning or an error for this.
+              // See https://github.com/webpack/webpack/issues/6571
+              sideEffects: true,
             },
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.
@@ -747,6 +797,7 @@ module.exports = function (webpackEnv) {
             },
           },
         }),
+      new WebpackBar(),
     ].filter(Boolean),
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter

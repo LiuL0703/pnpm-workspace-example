@@ -39,6 +39,8 @@ importers:
       jest: ^27.4.3
       jest-resolve: ^27.4.2
       jest-watch-typeahead: ^1.0.0
+      less: ^4.1.3
+      less-loader: ^11.1.0
       mini-css-extract-plugin: ^2.4.5
       postcss: ^8.4.4
       postcss-flexbugs-fixes: ^5.0.2
@@ -64,6 +66,7 @@ importers:
       webpack: ^5.64.4
       webpack-dev-server: ^4.6.0
       webpack-manifest-plugin: ^4.0.2
+      webpackbar: ^5.0.2
       workbox-webpack-plugin: ^6.4.1
     dependencies:
       '@babel/core': registry.npmmirror.com/@babel/core/7.20.2
@@ -124,6 +127,13 @@ importers:
       webpack-dev-server: registry.npmmirror.com/webpack-dev-server/4.11.1_webpack@5.75.0
       webpack-manifest-plugin: registry.npmmirror.com/webpack-manifest-plugin/4.1.1_webpack@5.75.0
       workbox-webpack-plugin: registry.npmmirror.com/workbox-webpack-plugin/6.5.4_webpack@5.75.0
+    devDependencies:
+      less: registry.npmmirror.com/less/4.1.3
+      less-loader: registry.npmmirror.com/less-loader/11.1.0_less@4.1.3+webpack@5.75.0
+      webpackbar: registry.npmmirror.com/webpackbar/5.0.2_webpack@5.75.0
+
+  packages/shared:
+    specifiers: {}
 
   packages/web-app:
     specifiers:
