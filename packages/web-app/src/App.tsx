@@ -2,6 +2,8 @@ import React from 'react';
 import logo from './logo.svg';
 import { Rate } from 'antd'
 import { Button } from '@components/index'
+import { Count } from './Count'
+import { CustomCalendar } from 'shared'
 import './App.less';
 import 'antd/dist/antd.min.css'
 
@@ -24,6 +26,8 @@ function App() {
       </header>
       <Rate />
       <Button />
+      <Count />
+      <CustomCalendar />
     </div>
   );
 }

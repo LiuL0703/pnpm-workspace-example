@@ -25,12 +25,17 @@ const ForkTsCheckerWebpackPlugin =
     ? require('react-dev-utils/ForkTsCheckerWarningWebpackPlugin')
     : require('react-dev-utils/ForkTsCheckerWebpackPlugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const WebpackBar = require('webpackbar')
+const chalk = require('chalk')
+const glob = require('glob')
+const PurgecssWebpackPlugin = require('purgecss-webpack-plugin')
+// const WebpackBar = require('webpackbar')
+const ProgressBarPlugin = require('progress-bar-webpack-plugin')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const createEnvironmentHash = require('./webpack/persistentCache/createEnvironmentHash');
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
-const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
+// const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 
 const reactRefreshRuntimeEntry = require.resolve('react-refresh/runtime');
 const reactRefreshWebpackPluginRuntimeEntry = require.resolve(
@@ -92,7 +97,7 @@ const hasJsxRuntime = (() => {
 module.exports = function (webpackEnv) {
   const isEnvDevelopment = webpackEnv === 'development';
   const isEnvProduction = webpackEnv === 'production';
-
+  const shouldUseSourceMap = webpackEnv === 'development'
   // Variable used for enabling profiling in Production
   // passed into alias object. Uses a flag if passed into the build command
   const isEnvProductionProfile =
@@ -294,6 +299,24 @@ module.exports = function (webpackEnv) {
         // This is only used in production mode
         new CssMinimizerPlugin(),
       ],
+      splitChunks: isEnvProduction ?  {
+        chunks: "all",
+        minSize: 20000,
+        maxSize: 20000,
+        minChunks: 2,
+        // cacheGroups: {
+        //   vendor: {
+        //     test: /[\/]node_modules[\/]/,
+        //     filename: 'js/[id]_vendors.js',
+        //     priority: -10
+        //   },
+        //   default: {
+        //     minChunks: 2,
+        //     filename: 'js/[id]_common.js', 
+        //     priority: -20
+        //   }
+        // }
+      } : {}
       // runtimeChunk: true,
       // splitChunks: { 
       //   chunks: "all",
@@ -431,7 +454,10 @@ module.exports = function (webpackEnv) {
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
-              include: paths.appSrc,
+              include: [
+                paths.appSrc, 
+                path.resolve(__dirname, '../../shared/')
+              ],
               exclude: /node_modules/,
               loader: require.resolve('babel-loader'),
               options: {
@@ -772,32 +798,39 @@ module.exports = function (webpackEnv) {
             infrastructure: 'silent',
           },
         }),
-      !disableESLintPlugin &&
-        new ESLintPlugin({
-          // Plugin options
-          extensions: ['js', 'mjs', 'jsx', 'ts', 'tsx'],
-          formatter: require.resolve('react-dev-utils/eslintFormatter'),
-          eslintPath: require.resolve('eslint'),
-          failOnError: !(isEnvDevelopment && emitErrorsAsWarnings),
-          context: paths.appSrc,
-          cache: true,
-          cacheLocation: path.resolve(
-            paths.appNodeModules,
-            '.cache/.eslintcache'
-          ),
-          // ESLint class options
-          cwd: paths.appPath,
-          resolvePluginsRelativeTo: __dirname,
-          baseConfig: {
-            extends: [require.resolve('eslint-config-react-app/base')],
-            rules: {
-              ...(!hasJsxRuntime && {
-                'react/react-in-jsx-scope': 'error',
-              }),
-            },
-          },
-        }),
-      new WebpackBar(),
+      // !disableESLintPlugin &&
+      //   new ESLintPlugin({
+      //     // Plugin options
+      //     extensions: ['js', 'mjs', 'jsx', 'ts', 'tsx'],
+      //     formatter: require.resolve('react-dev-utils/eslintFormatter'),
+      //     eslintPath: require.resolve('eslint'),
+      //     failOnError: !(isEnvDevelopment && emitErrorsAsWarnings),
+      //     context: paths.appSrc,
+      //     cache: true,
+      //     cacheLocation: path.resolve(
+      //       paths.appNodeModules,
+      //       '.cache/.eslintcache'
+      //     ),
+      //     // ESLint class options
+      //     cwd: paths.appPath,
+      //     resolvePluginsRelativeTo: __dirname,
+      //     baseConfig: {
+      //       extends: [require.resolve('eslint-config-react-app/base')],
+      //       rules: {
+      //         ...(!hasJsxRuntime && {
+      //           'react/react-in-jsx-scope': 'error',
+      //         }),
+      //       },
+      //     },
+      //   }),
+      // new WebpackBar(),
+      new ProgressBarPlugin({
+        format: ' build [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds)',
+      }),
+      new PurgecssWebpackPlugin({
+        paths: glob.sync(`${path.join(__dirname, './src')}/**/*`, {nodir: true}),
+      }),
+      new BundleAnalyzerPlugin(),
     ].filter(Boolean),
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
